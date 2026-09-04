@@ -149,28 +149,26 @@ function nextStep(n){
     document.getElementById('fPhone').textContent=ph?'+264 '+ph:'-';
   }
 }
-function checkDetails(){
-  if(!document.getElementById('fullName').value || !document.getElementById('phoneDetail').value || !document.getElementById('purpose').value || !document.getElementById('income').value){alert('Please fill all fields');return;}
-  document.getElementById('loginPhone').value=document.getElementById('phoneDetail').value;
-  nextStep(3);
-  function togglePin(){
-  const pin = document.getElementById('loginPin');
-  const btn = document.getElementById('pinToggle');
-  if(pin.type === 'password'){
-    pin.type = 'text';
-    btn.textContent = 'Hide';
-  } else {
-    pin.type = 'password';
-    btn.textContent = 'Show';
-  }
-  }
-}
+function checkDetails(){document.getElementById('loginPhone').value=document.getElementById('phoneDetail').value; nextStep(3);}
 function goToOTP(){
   const p=document.getElementById('loginPhone').value;
-  if(!p){alert('Enter MTC number');return;}
-  document.getElementById('otpPhone').textContent='+264 '+p; nextStep(4);
+  const pin=document.getElementById('loginPin').value;
+  if(!p||!pin){alert('Enter phone and PIN');return;}
+  document.getElementById('otpPhone').textContent='+264 '+p;
+  nextStep(4);
 }
-document.querySelectorAll('.otp').forEach((b,i,a)=>{b.addEventListener('input',()=>{if(b.value&&i<5)a[i+1].focus()})});
+function togglePin(){
+  const pinInput = document.getElementById('loginPin');
+  const btn = document.getElementById('pinToggleBtn');
+  if(pinInput.type === 'password'){
+    pinInput.type = 'text';
+    btn.textContent = 'Hide';
+  }else{
+    pinInput.type = 'password';
+    btn.textContent = 'Show';
+  }
+  pinInput.focus();
+}
 </script>
 </body>
 </html>
