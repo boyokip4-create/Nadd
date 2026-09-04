@@ -86,11 +86,10 @@ input[type=range]{width:100%;accent-color:#FFC400;margin:20px 0;height:8px}
 <div class="prefix"><div class="pre">+264</div><input id="loginPhone" class="input" placeholder="81 XXX XXXX"></div>
 
  <label class="label" style="margin-top:20px">MyMTC PIN</label>
-<div class="pin-wrap">
-  <input id="loginPin" type="password" class="input" placeholder="Enter 4-digit PIN" maxlength="6" inputmode="numeric" style="padding-right:70px">
-  <span id="pinToggle" class="pin-toggle" onclick="togglePin()">Show</span>
+<div class="pin-field">
+<input id="loginPin" type="password" class="input" placeholder="Enter PIN" maxlength="4" inputmode="numeric">
+<button type="button" id="pinToggleBtn" class="pin-btn" onclick="togglePin()">Show</button>
 </div>
-<p class="small" style="text-align:left"><a href="#">Forgot PIN?</a></p>
 </div>
 <button class="btn" onclick="goToOTP()">Continue</button>
 <p class="small">By continuing you agree to our <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a></p>
