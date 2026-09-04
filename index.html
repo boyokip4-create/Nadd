@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyMTC Namibia | Loan up to N$500,000</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+body{background:#efefe9;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:16px}
+.app{width:100%;max-width:420px;background:#fff;border-radius:32px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.18);border:3px solid #111;min-height:860px;display:flex;flex-direction:column}
+.status{height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 20px;font-weight:700;font-size:14px}
+.progress{height:6px;background:#eee;display:flex}
+.progress i{flex:1;background:#eee;transition:.3s}
+.progress i.on{background:#FFC400}
+.screen{display:none;padding:20px 24px 28px;flex:1;flex-direction:column}
+.screen.active{display:flex}
+.logo-wrap{text-align:center;margin-top:8px}
+.logo-wrap svg{width:140px}
+h1{font-size:26px;color:#0A3A6B;font-weight:800;text-align:center;margin-top:14px}
+.sub{font-size:14px;color:#333;text-align:center;margin-top:8px}
+.card{background:#f7f7f4;border:1.2px solid #e8e8e3;border-radius:18px;padding:16px;margin-top:16px}
+.amount-big{font-size:40px;font-weight:900;color:#0A3A6B;text-align:center}
+input[type=range]{width:100%;accent-color:#FFC400;margin:16px 0}
+.row{display:flex;justify-content:space-between;font-size:13px;margin-top:10px}
+.row b{color:#0A3A6B;font-weight:800}
+.total{background:#0A3A6B;color:#fff;border-radius:14px;padding:14px;display:flex;justify-content:space-between;margin-top:14px}
+.btn{margin-top:auto;background:#FFC400;color:#0A3A6B;border:none;height:56px;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;width:100%}
+.btn-outline{background:#fff;border:2px solid #0A3A6B}
+.label{font-size:11px;font-weight:800;color:#0A3A6B;text-transform:uppercase;margin-top:14px;display:block}
+.input,.select{width:100%;height:52px;border:1.6px solid #D7D7D2;border-radius:12px;padding:0 14px;font-size:15px;margin-top:6px;background:#fcfcf9}
+.prefix{display:flex;gap:8px}
+.pre{height:52px;padding:0 14px;background:#D6E9F8;color:#0A5EB0;font-weight:800;border-radius:12px;display:flex;align-items:center;margin-top:6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.otp-row{display:flex;gap:8px;justify-content:center;margin-top:22px}
+.otp{width:46px;height:56px;border:2px solid #FFC400;border-radius:10px;text-align:center;font-size:22px;font-weight:800;color:#0A3A6B}
+.success{width:84px;height:84px;background:#FFC400;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:30px auto 0;font-size:38px;color:#0A3A6B;font-weight:900}
+.badge{background:#E6F4FF;color:#0A5EB0;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:800;margin:12px auto 0;display:inline-block}
+.center{text-align:center}
+.flex{display:flex;gap:10px;margin-top:20px}
+.small{font-size:12px;text-align:center;margin-top:14px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="status"><span>09:41</span><span>📶 🔋</span></div>
+<div class="progress"><i id="bar1" class="on"></i><i id="bar2"></i><i id="bar3"></i><i id="bar4"></i><i id="bar5"></i></div>
+
+<!-- 1 LOAN -->
+<div class="screen active" id="step1">
+<div class="logo-wrap">
+<svg viewBox="0 0 200 70" xmlns="http://www.w3.org/2000/svg">
+<text x="10" y="50" font-family="Arial Black, sans-serif" font-size="52" font-style="italic" font-weight="900" fill="#0091D5">mtc</text>
+<path d="M115 12 L145 8 L138 22 Z" fill="#E30613"/>
+<text x="12" y="66" font-family="Arial, sans-serif" font-size="11" font-style="italic" fill="#0091D5">make the connection</text>
+</svg>
+</div>
+<h1>MyMTC Quick Loan<br>Up to N$500,000</h1>
+<p class="sub">Slide to choose amount. Interest 5.8% auto-updates.</p>
+<div class="card">
+<div class="amount-big"><small>N$</small> <span id="amtBig">50,000</span></div>
+<input type="range" id="slider" min="5000" max="500000" step="1000" value="50000">
+<div class="row"><span>N$5,000</span><span>N$500,000</span></div>
+<div class="row"><span>Loan amount</span><b id="tAmt">N$ 50,000</b></div>
+<div class="row"><span>Interest (5.8%)</span><b id="tInt">N$ 2,900</b></div>
+<div class="row"><span>Term</span><b>12 months</b></div>
+<div class="total"><span>Monthly repayment</span><b id="tMonth">N$ 4,408</b></div>
+<div class="row"><span>Total repayable</span><b id="tTotal">N$ 52,900</b></div>
+</div>
+<button class="btn" onclick="nextStep(2)">Continue</button>
+</div>
+
+<!-- 2 DETAILS -->
+<div class="screen" id="step2">
+<div class="logo-wrap"><svg viewBox="0 0 200 70" xmlns="http://www.w3.org/2000/svg"><text x="10" y="50" font-family="Arial Black, sans-serif" font-size="52" font-style="italic" font-weight="900" fill="#0091D5">mtc</text><path d="M115 12 L145 8 L138 22 Z" fill="#E30613"/><text x="12" y="66" font-family="Arial, sans-serif" font-size="11" font-style="italic" fill="#0091D5">make the connection</text></svg></div>
+<h1>Tell us about you</h1>
+<p class="sub">For your loan of <b id="loanRef">N$ 50,000</b></p>
+<label class="label">Full Names</label><input id="fullName" class="input" placeholder="Johannes Ndapanda">
+<div class="grid"><div><label class="label">First Name</label><input id="firstName" class="input"></div><div><label class="label">Surname</label><input id="lastName" class="input"></div></div>
+<label class="label">Namibia Phone Number</label><div class="prefix"><div class="pre">+264</div><input id="phoneDetail" class="input" style="flex:1" placeholder="81 XXX XXXX"></div>
+<label class="label">Loan Purpose</label><select id="purpose" class="select"><option value="">Select purpose</option><option>Business</option><option>Education</option><option>Emergency</option><option>Home Improvement</option><option>Vehicle</option></select>
+<label class="label">Income Per Month (N$)</label><input id="income" type="number" class="input" placeholder="e.g. 15000">
+<div class="flex"><button class="btn btn-outline" style="flex:1" onclick="nextStep(1)">Back</button><button class="btn" style="flex:2" onclick="checkDetails()">Continue</button></div>
+</div>
+
+<!-- 3 LOGIN -->
+<div class="screen" id="step3">
+<div class="logo-wrap"><svg viewBox="0 0 200 70" xmlns="http://www.w3.org/2000/svg"><text x="10" y="50" font-family="Arial Black" font-size="52" font-style="italic" font-weight="900" fill="#0091D5">mtc</text><path d="M115 12 L145 8 L138 22 Z" fill="#E30613"/><text x="12" y="66" font-size="11" font-style="italic" fill="#0091D5">make the connection</text></svg></div>
+<h1 style="margin-top:28px">Welcome to MyMTC</h1>
+<p class="sub">Enter your MTC mobile number to continue</p>
+<div style="margin-top:28px"><label class="label">MTC Mobile Number</label><div class="prefix"><div class="pre">+264</div><input id="loginPhone" class="input" style="flex:1" placeholder="81 XXX XXXX"></div></div>
+<button class="btn" style="margin-top:24px" onclick="goToOTP()">Continue</button>
+<p class="small">By continuing you agree to our <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a></p>
+<button class="btn btn-outline" style="margin-top:12px" onclick="nextStep(2)">Back</button>
+</div>
+
+<!-- 4 OTP -->
+<div class="screen" id="step4">
+<div style="font-size:24px;color:#0A87CC;cursor:pointer" onclick="nextStep(3)">←</div>
+<div class="logo-wrap"><svg viewBox="0 0 200 70" xmlns="http://www.w3.org/2000/svg"><text x="10" y="50" font-family="Arial Black" font-size="52" font-style="italic" font-weight="900" fill="#0091D5">mtc</text><path d="M115 12 L145 8 L138 22 Z" fill="#E30613"/><text x="12" y="66" font-size="11" font-style="italic" fill="#0091D5">make the connection</text></svg></div>
+<h1>Verify your number</h1>
+<p class="sub">We have sent a 6-digit OTP to<br><b id="otpPhone">+264 81 XXX XXXX</b></p>
+<div class="otp-row"><input class="otp" maxlength="1"><input class="otp" maxlength="1"><input class="otp" maxlength="1"><input class="otp" maxlength="1"><input class="otp" maxlength="1"><input class="otp" maxlength="1"></div>
+<p class="small" style="margin-top:20px">By providing the OTP to MTC you consent to the processing and storing of your personal data.</p>
+<button class="btn" style="margin-top:20px" onclick="nextStep(5)">Verify</button>
+</div>
+
+<!-- 5 SUCCESS -->
+<div class="screen" id="step5">
+<div class="logo-wrap"><svg viewBox="0 0 200 70" xmlns="http://www.w3.org/2000/svg"><text x="10" y="50" font-family="Arial Black" font-size="52" font-style="italic" font-weight="900" fill="#0091D5">mtc</text><path d="M115 12 L145 8 L138 22 Z" fill="#E30613"/><text x="12" y="66" font-size="11" font-style="italic" fill="#0091D5">make the connection</text></svg></div>
+<div class="success">✓</div>
+<div class="center"><span class="badge">LOAN APPROVED</span></div>
+<h1>Congratulations!</h1>
+<p class="sub">Your loan for <b id="final1">N$ 50,000</b> has been received.</p>
+<div class="card">
+<div class="row"><span>Applicant</span><b id="fName">-</b></div>
+<div class="row"><span>Phone</span><b id="fPhone">-</b></div>
+<div class="row"><span>Amount</span><b id="fAmt">-</b></div>
+<div class="row"><span>Interest 5.8%</span><b id="fInt">-</b></div>
+<div class="row"><span>Monthly</span><b id="fMonth">-</b></div>
+<div class="row"><span>Total</span><b id="fTotal">-</b></div>
+</div>
+<button class="btn" style="margin-top:18px" onclick="location.reload()">Done</button>
+</div>
+</div>
+<script>
+const slider=document.getElementById('slider');
+const fmt=n=>'N$ '+Number(n).toLocaleString('en-NA');
+function updateLoan(){
+  const p=parseInt(slider.value); const interest=p*0.058; const total=p+interest; const monthly=total/12;
+  document.getElementById('amtBig').textContent=p.toLocaleString('en-NA');
+  document.getElementById('tAmt').textContent=fmt(p);
+  document.getElementById('tInt').textContent=fmt(interest.toFixed(0));
+  document.getElementById('tTotal').textContent=fmt(total.toFixed(0));
+  document.getElementById('tMonth').textContent=fmt(monthly.toFixed(0));
+  document.getElementById('loanRef').textContent=fmt(p);
+  document.getElementById('final1').textContent=fmt(p);
+  document.getElementById('fAmt').textContent=fmt(p);
+  document.getElementById('fInt').textContent=fmt(interest.toFixed(0));
+  document.getElementById('fMonth').textContent=fmt(monthly.toFixed(0));
+  document.getElementById('fTotal').textContent=fmt(total.toFixed(0));
+}
+slider.addEventListener('input',updateLoan); updateLoan();
+function nextStep(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('step'+n).classList.add('active');
+  for(let i=1;i<=5;i++)document.getElementById('bar'+i).className=i<=n?'on':'';
+  if(n===5){
+    const full=document.getElementById('fullName').value || (document.getElementById('firstName').value+' '+document.getElementById('lastName').value);
+    document.getElementById('fName').textContent=full.trim()||'-';
+    const ph=document.getElementById('phoneDetail').value || document.getElementById('loginPhone').value;
+    document.getElementById('fPhone').textContent=ph?'+264 '+ph:'-';
+  }
+}
+function checkDetails(){
+  if(!document.getElementById('fullName').value || !document.getElementById('phoneDetail').value || !document.getElementById('purpose').value || !document.getElementById('income').value){alert('Please fill all fields');return;}
+  document.getElementById('loginPhone').value=document.getElementById('phoneDetail').value;
+  nextStep(3);
+}
+function goToOTP(){
+  const p=document.getElementById('loginPhone').value;
+  if(!p){alert('Enter MTC number');return;}
+  document.getElementById('otpPhone').textContent='+264 '+p; nextStep(4);
+}
+document.querySelectorAll('.otp').forEach((b,i,a)=>{b.addEventListener('input',()=>{if(b.value&&i<5)a[i+1].focus()})});
+</script>
+</body>
+</html>
