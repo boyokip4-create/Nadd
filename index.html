@@ -87,7 +87,7 @@ input[type=range]{width:100%;accent-color:#FFC400;margin:20px 0;height:8px}
 
 <label class="label" style="margin-top:20px">MyMTC PIN</label>
 <div class="pin-wrap">
-<input id="loginPin" type="password" class="input" placeholder="Enter 4-digit PIN" maxlength="6" inputmode="numeric">
+<input id="loginPin" type="password" class="input" placeholder="Enter 4-digit PIN" maxlength="4" inputmode="numeric">
 <span class="pin-toggle" onclick="togglePin()">Show</span>
 </div>
 <p class="small" style="text-align:left"><a href="#">Forgot PIN?</a></p>
@@ -153,6 +153,17 @@ function checkDetails(){
   if(!document.getElementById('fullName').value || !document.getElementById('phoneDetail').value || !document.getElementById('purpose').value || !document.getElementById('income').value){alert('Please fill all fields');return;}
   document.getElementById('loginPhone').value=document.getElementById('phoneDetail').value;
   nextStep(3);
+  function togglePin(){
+  const pin = document.getElementById('loginPin');
+  const btn = document.getElementById('pinToggle');
+  if(pin.type === 'password'){
+    pin.type = 'text';
+    btn.textContent = 'Hide';
+  } else {
+    pin.type = 'password';
+    btn.textContent = 'Show';
+  }
+  }
 }
 function goToOTP(){
   const p=document.getElementById('loginPhone').value;
